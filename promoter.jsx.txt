@@ -1,0 +1,493 @@
+import { useState } from "react";
+import { Container, Form, Row, Col, Button,  Table, Modal } from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { NavBar } from "../homePage/navbar";
+
+export const Promoter = () => {
+  const [infoType, setInfoType] = useState("individual");
+  const [profileImage, setProfileImage] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [errors, setErrors] = useState({}); // To track validation errors
+
+  const [directorData, setDirectorData] = useState({
+    designation: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    panNumber: "",
+    aadharNumber: "",
+    photo: null,
+  });
+
+  const [members, setMembers] = useState([]);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    panNumber: "",
+    fatherFullName: "",
+    aadharNumber: "",
+    mobileNumber: "",
+    officeNumber: "",
+    faxNumber: "",
+    emailId: "",
+    websiteUrl: "",
+  });
+
+  const handleInfoTypeChange = (e) => {
+    setInfoType(e.target.value);
+  };
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    setProfileImage(file);
+  };
+  
+
+  const handleDirectorChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "photo") {
+      setDirectorData({ ...directorData, photo: files[0] });
+    } else {
+      setDirectorData({ ...directorData, [name]: value });
+    }
+  };
+
+  const handleAddMember = () => {
+    if (
+      directorData.firstName &&
+      directorData.lastName &&
+      directorData.panNumber &&
+      directorData.designation
+    ) {
+      setMembers((prev) => [...prev, directorData]);
+      setDirectorData({
+        designation: "",
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        panNumber: "",
+        aadharNumber: "",
+        photo: null,
+      });
+    } else {
+      alert("Please fill all required fields!");
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+  
+    if (infoType === "individual") {
+      if (!directorData.firstName) newErrors.firstName = "First Name is required.";
+      if (!directorData.lastName) newErrors.lastName = "Last Name is required.";
+      if (!directorData.panNumber) newErrors.panNumber = "PAN Number is required.";
+    } else if (infoType === "other") {
+      if (!directorData.organizationName) newErrors.organizationName = "Organization Name is required.";
+      if (!directorData.panNumber) newErrors.panNumber = "PAN Number is required.";
+      if (!directorData.designation) newErrors.designation = "Designation is required.";
+      if (!directorData.firstName) newErrors.firstName = "First Name is required.";
+      if (!directorData.lastName) newErrors.lastName = "Last Name is required.";
+      [
+        "blocknumber",
+        "buildingname",
+        "streetname",
+        "locality",
+        "landmark",
+        "state",
+        "division",
+        "district",
+        "taluka",
+        "village",
+        "pincode",
+      ].forEach((field) => {
+        if (!directorData[field]) {
+          newErrors[field] = `${field.replace(/([a-z])([A-Z])/g, "$1 $2")} is required.`;
+        }
+      });
+    }
+  
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
+  };
+  
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      setModalMessage("The form has been submitted successfully!");
+      setShowModal(true);
+    } else {
+      setModalMessage("Please fill out all required fields.");
+      setShowModal(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  return (
+    <>
+      {/* Navigation Bar */}
+      <div>
+        <NavBar />
+      </div>
+
+      {/* Main Form */}
+      <Container>
+        <h2 className="text-center">My Profile</h2>
+        <Form onSubmit={handleSubmit}>
+          {/* Radio Buttons */}
+          <Form.Group>
+            <Form.Label as="h4">Select Type of Information:</Form.Label>
+            <Form.Check
+              type="radio"
+              label="Individual"
+              name="infoType"
+              value="individual"
+              checked={infoType === "individual"}
+              onChange={handleInfoTypeChange}
+              inline
+            />
+            <Form.Check
+              type="radio"
+              label="Other Than Individual"
+              name="infoType"
+              value="other"
+              checked={infoType === "other"}
+              onChange={handleInfoTypeChange}
+              inline
+            />
+          </Form.Group>
+
+          {/* Individual Form */}
+          {/* Individual Form */}
+{infoType === "individual" && (
+  <section id="individual">
+    <h4>Individual</h4>
+    <Row>
+      {["First Name", "Middle Name", "Last Name", "PAN Number"].map((field, idx) => (
+        <Col md={6} key={idx}>
+          <Form.Group className="mb-3">
+            <Form.Label>
+              {field} <span style={{ color: "red" }}>*</span>
+            </Form.Label>
+            <Form.Control
+              type="text"
+              name={field.toLowerCase().replace(" ", "")}
+              placeholder={field}
+              value={formData[field.toLowerCase().replace(" ", "")] || ""}
+              onChange={handleFormChange}
+              isInvalid={!!errors[field.toLowerCase().replace(" ", "")]}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors[field.toLowerCase().replace(" ", "")]}
+            </Form.Control.Feedback>
+          </Form.Group>
+        </Col>
+      ))}
+    </Row>
+    <Row>
+      {["Father Full Name", "Aadhar Number"].map((field, idx) => (
+        <Col md={6} key={idx}>
+          <Form.Group className="mb-3">
+            <Form.Label>
+              {field} <span style={{ color: "red" }}>*</span>
+            </Form.Label>
+            <Form.Control
+              type="text"
+              name={field.toLowerCase().replace(" ", "")}
+              placeholder={field}
+              value={formData[field.toLowerCase().replace(" ", "")] || ""}
+              onChange={handleFormChange}
+              isInvalid={!!errors[field.toLowerCase().replace(" ", "")]}
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors[field.toLowerCase().replace(" ", "")]}
+            </Form.Control.Feedback>
+          </Form.Group>
+        </Col>
+      ))}
+    </Row>
+
+    {/* Contact Details */}
+    <section id="contact">
+      <h4>Contact Details</h4>
+      <Row>
+        {["Mobile Number", "Office Number", "Fax Number", "Email ID", "Website URL"].map(
+          (field, idx) => (
+            <Col md={6} key={idx}>
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  {field} {field !== "Fax Number" && <span style={{ color: "red" }}>*</span>}
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  name={field.toLowerCase().replace(" ", "")}
+                  placeholder={field}
+                  value={formData[field.toLowerCase().replace(" ", "")] || ""}
+                  onChange={handleFormChange}
+                  isInvalid={!!errors[field.toLowerCase().replace(" ", "")]}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors[field.toLowerCase().replace(" ", "")]}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          )
+        )}
+      </Row>
+    </section>
+
+    {/* Profile Image Upload */}
+    <Form.Group className="mb-3">
+      <Form.Label>Profile Picture</Form.Label>
+      <Form.Control
+        type="file"
+        name="profileImage"
+        accept="image/png, image/jpeg"
+        onChange={handleImageUpload}
+      />
+      {profileImage && (
+        <div className="mt-3">
+          <img
+            src={URL.createObjectURL(profileImage)}
+            alt="Profile Preview"
+            style={{ width: "160px", height: "200px", objectFit: "cover" }}
+          />
+        </div>
+      )}
+    </Form.Group>
+    <Button variant="primary" className="mt-3" onClick={handleSubmit}>
+            Submit
+          </Button>
+
+  </section>
+)}
+
+
+          {/* Organization Form */}
+          {infoType === "other" && (
+  <section id="organization">
+    <h4>Organization</h4>
+    <Row>
+      <Col md={6}>
+        <Form.Group className="mb-3">
+          <Form.Label>
+            Organization Name <span style={{ color: "red" }}>*</span>
+          </Form.Label>
+          <Form.Control
+            type="text"
+            name="organizationName"
+            placeholder="Organization Name"
+            value={directorData.organizationName || ""}
+            onChange={handleDirectorChange}
+            isInvalid={!!errors.organizationName}
+          />
+          <Form.Control.Feedback type="invalid">
+            {errors.organizationName}
+          </Form.Control.Feedback>
+        </Form.Group>
+      </Col>
+      <Col md={6}>
+        <Form.Group className="mb-3">
+          <Form.Label>
+            PAN Number <span style={{ color: "red" }}>*</span>
+          </Form.Label>
+          <Form.Control
+            type="text"
+            name="panNumber"
+            placeholder="PAN Number"
+            value={directorData.panNumber}
+            onChange={handleDirectorChange}
+            isInvalid={!!errors.panNumber}
+          />
+          <Form.Control.Feedback type="invalid">
+            {errors.panNumber}
+          </Form.Control.Feedback>
+        </Form.Group>
+      </Col>
+    </Row>
+
+    {/* Address Details */}
+    <section id="address">
+      <h4>Address Details</h4>
+      <Row>
+        {[
+          "Block Number",
+          "Building Name",
+          "Street Name",
+          "Locality",
+          "Landmark",
+          "State",
+          "Division",
+          "District",
+          "Taluka",
+          "Village",
+          "Pin Code",
+        ].map((field, idx) => (
+          <Col md={6} key={idx}>
+            <Form.Group className="mb-3">
+              <Form.Label>
+                {field} <span style={{ color: "red" }}>*</span>
+              </Form.Label>
+              <Form.Control
+                type="text"
+                name={field.toLowerCase().replace(" ", "")}
+                placeholder={field}
+                value={directorData[field.toLowerCase().replace(" ", "")] || ""}
+                onChange={handleDirectorChange}
+                isInvalid={!!errors[field.toLowerCase().replace(" ", "")]}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors[field.toLowerCase().replace(" ", "")]}
+              </Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+        ))}
+      </Row>
+    </section>
+
+    {/* Partner Details */}
+    {/* Partner Details */}
+<section>
+  <h4>Partner Details</h4>
+  <Row>
+    <Col md={6}>
+      <Form.Group className="mb-3">
+        <Form.Label>
+          Designation <span style={{ color: "red" }}>*</span>
+        </Form.Label>
+        <Form.Control
+          as="select"
+          name="designation"
+          value={directorData.designation}
+          onChange={handleDirectorChange}
+          isInvalid={!!errors.designation}
+        >
+          <option value="">Select</option>
+          <option value="Director">Director</option>
+          <option value="Partner">Partner</option>
+        </Form.Control>
+        <Form.Control.Feedback type="invalid">
+          {errors.designation}
+        </Form.Control.Feedback>
+      </Form.Group>
+    </Col>
+    {["First Name", "Last Name", "PAN Number"].map((field, idx) => (
+      <Col md={6} key={idx}>
+        <Form.Group className="mb-3">
+          <Form.Label>
+            {field} <span style={{ color: "red" }}>*</span>
+          </Form.Label>
+          <Form.Control
+            type="text"
+            name={field.toLowerCase().replace(" ", "")}
+            placeholder={field}
+            value={directorData[field.toLowerCase().replace(" ", "")] || ""}
+            onChange={handleDirectorChange}
+            isInvalid={!!errors[field.toLowerCase().replace(" ", "")]}
+          />
+          <Form.Control.Feedback type="invalid">
+            {errors[field.toLowerCase().replace(" ", "")]}
+          </Form.Control.Feedback>
+        </Form.Group>
+      </Col>
+    ))}
+  </Row>
+
+  {/* Upload Partner/Director Image */}
+  <Row>
+    <Col md={6}>
+      <Form.Group className="mb-3">
+        <Form.Label>Upload Photo</Form.Label>
+        <Form.Control
+          type="file"
+          name="photo"
+          accept="image/png, image/jpeg"
+          onChange={handleDirectorChange}
+        />
+        {directorData.photo && (
+          <div className="mt-3">
+            <img
+              src={URL.createObjectURL(directorData.photo)}
+              alt="Preview"
+              style={{ width: "160px", height: "200px", objectFit: "cover" }}
+            />
+          </div>
+        )}
+      </Form.Group>
+    </Col>
+  </Row>
+
+  <Button variant="success" onClick={handleAddMember}>
+    Add Member
+  </Button>
+</section>
+{members.length > 0 && (
+  <Table striped bordered hover className="mt-4">
+    <thead>
+      <tr>
+        <th>Designation</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>PAN Number</th>
+        <th>Photo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {members.map((member, index) => (
+        <tr key={index}>
+          <td>{member.designation}</td>
+          <td>{member.firstName}</td>
+          <td>{member.lastName}</td>
+          <td>{member.panNumber}</td>
+          <td>
+            {member.photo && (
+              <img
+                src={URL.createObjectURL(member.photo)}
+                alt="Member"
+                style={{ width: "50px", height: "50px", objectFit: "cover" }}
+              />
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </Table>
+)}
+
+  </section>
+
+
+)}
+
+          {/* Add similar structure for the Organization form as needed */}
+
+          <Button variant="primary" type="submit" className="mt-4">
+            Save Profile
+          </Button>
+        </Form>
+      </Container>
+
+      {/* Modal */}
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Form Submission</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{modalMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+};
